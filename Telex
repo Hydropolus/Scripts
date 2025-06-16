@@ -1,4 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/bash
+# in ~/.bashrc: alias telexin="minimodem -r -q 1200 --print-filter >>~/telexRead.txt"
 
 appTest(){
 [[ -z $(command -v xxh32sum) ]] && { echo "xxh32sum? Paket XXHASH installieren."; exit; }
@@ -6,18 +7,18 @@ appTest(){
 [[ -z $(command -v file) ]] && { echo "file? Paket FILE installieren."; exit; }; }
 
 info(){
-echo "Telex  DateiName [z] [Baud] [Modem-SteuerParameter]           Version 1.5"
+echo "Telex  DateiName [z] [Baud] [Modem-SteuerParameter]           Version 1.6"
 echo "TELEX: Dienstprogramm für MINIMODEM zum bequemen akustischen Dateiversand"
 echo "       Der Dateiname muss der erste Parameter sein. Die anderen werden an"
 echo "       MINIMODEM unverändert durchgereicht. Ohne Parameter  wird mit 1200"
 echo "       Baud im  Format BELL-202 bei 48 kHz Samplingrate gesendet.  Binäre"
 echo "       Dateien werden erkannt und als ein selbstdekodierendes Shellskript"
-echo "       base32/64/92 codiert versandt. “z” zippt die Datei zuvor und lässt"
+echo "       base32/64/92 codiert versandt. “z” xzippt die Datei zuvor und läßt"
 echo "       sie ebenfalls vom Skript dekomprimieren."; }
 
 delay(){
 echo; for ((tmr=$1; tmr>-1; tmr=tmr-1)); do
-   echo -e "\033[1A\e[0;33mCarrier in $tmr Sekunden\033[0m"; sleep 1
+   echo -e "\033[1A\033[0;33mCarrier in $tmr Sekunden\033[0m"; sleep 1
 done; }
 
 txtTelex(){
@@ -52,17 +53,23 @@ baseX=base64
 chckX=sha1sum
 wvdat=$TEMP/MiMo$$.wav
 wvtxt=$TEMP/MiMo$$.txt
+player=termux-media-player
 cli="$@"; [[ -z $cli ]] && cli=1200
 chksum=$($chckX $datei |awk '{print $1}')
 
 [[ -z $(file $datei |grep text) ]] && binTelex || txtTelex
 
 cat $wvtxt |minimodem -f $wvdat -t $cli
-[[ -z $z ]] || echo "  XZ-komprimiert zu $datei"
-echo "Send File: $(ls -hs $wvtxt)"
-echo "Send Wave: $(ls -hs $wvdat)"
-ffprobe -hide_banner $wvdat; delay 3
-termux-media-player play $wvdat
+[[ -z $z ]] || { echo "  XZ-komprimiert zu $datei"; rm $datei; }
+echo "Send Text: $(stat -c%s $wvtxt) Bytes"
+echo "Send Wave: $(ls -sh $wvdat |awk '{print $1}')"
+echo "Wave $( ffprobe -hide_banner $wvdat 2>&1 |grep Duration)"
+echo "      $(ffprobe -hide_banner $wvdat 2>&1 |grep Audio |awk -F, '{print $3,$2,$4,$5}')"
 
-echo -e "\033[0;33mTonausgabe abbrechen: “ply stop” bzw. “termux-media-player stop”.\033[0m"
-[[ -z $z ]] || rm $datei
+delay 3; $player play $wvdat
+echo -e "\033[0;33mTonausgabe abbrechen mit [ESC]-Taste.\033[0m"; echo
+while [[ -z $($player info |grep No) ]]; do
+   echo -e "\033[1ATransmitting: $($player info |grep Current |awk '{print $3, $4, $5}')"
+   read -n1 -t1 -r key; [[ $key == $'\033' ]] && { $player stop; break; }
+done
+
