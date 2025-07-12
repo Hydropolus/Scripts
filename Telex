@@ -4,10 +4,9 @@
 appTest(){
 [[ -z $(command -v xxh32sum) ]] && { echo "xxh32sum? Paket XXHASH installieren."; exit; }
 [[ -z $(command -v base91) ]] && { echo "base91? Programm BASE91 compilieren."; exit; }
-[[ -z $(command -v file) ]] && { echo "file? Paket FILE installieren."; exit; }; }
 
 info(){
-echo "Telex  DateiName [z] [Baud] [Modem-SteuerParameter]           Version 1.6"
+echo "Telex  DateiName [z] [Baud] [Modem-SteuerParameter]           Version 1.7"
 echo "TELEX: Dienstprogramm für MINIMODEM zum bequemen akustischen Dateiversand"
 echo "       Der Dateiname muss der erste Parameter sein. Die anderen werden an"
 echo "       MINIMODEM unverändert durchgereicht. Ohne Parameter  wird mit 1200"
@@ -57,7 +56,7 @@ player=termux-media-player
 cli="$@"; [[ -z $cli ]] && cli=1200
 chksum=$($chckX $datei |awk '{print $1}')
 
-[[ -z $(file $datei |grep text) ]] && binTelex || txtTelex
+[[ -z $(cat $datei |tr -d '[:print:]') ]] && txtTelex || binTelex
 
 cat $wvtxt |minimodem -f $wvdat -t $cli
 [[ -z $z ]] || { echo "  XZ-komprimiert zu $datei"; rm $datei; }
