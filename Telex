@@ -4,9 +4,10 @@
 appTest(){
 [[ -z $(command -v xxh32sum) ]] && { echo "xxh32sum? Paket XXHASH installieren."; exit; }
 [[ -z $(command -v base91) ]] && { echo "base91? Programm BASE91 compilieren."; exit; }
+}
 
 info(){
-echo "Telex  DateiName [z] [Baud] [Modem-SteuerParameter]           Version 1.7"
+echo "Telex  DateiName [z] [Baud] [Modem-SteuerParameter]           Version 1.6"
 echo "TELEX: Dienstprogramm für MINIMODEM zum bequemen akustischen Dateiversand"
 echo "       Der Dateiname muss der erste Parameter sein. Die anderen werden an"
 echo "       MINIMODEM unverändert durchgereicht. Ohne Parameter  wird mit 1200"
